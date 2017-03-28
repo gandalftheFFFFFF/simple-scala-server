@@ -4,6 +4,8 @@ import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpRequest, HttpResponse, HttpMethods, Uri}
 import akka.stream.ActorMaterializer
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 
 import scala.concurrent.Future
 import scala.io.StdIn
@@ -15,14 +17,19 @@ object Main extends App {
   import system.dispatcher
   implicit val materializer = ActorMaterializer()
 
-  import akka.http.scaladsl.server.Directives._
 
-  def handler(request: HttpRequest): Future[HttpResponse] = request match {
-    case HttpRequest(HttpMethods.GET, Uri.Path("/hello"), _, _, _) =>
-      Future.successful(HttpResponse(entity = "Hello, world!"))
-  }
+  val route: Route = 
+    get {
+      path("hello") {
+        complete("Hello, world!")
+      } ~
+      path("world") {
+        complete("World, hello!")
+      }
+    }
 
-  Http().bindAndHandleAsync(handler, "localhost", 8080)
+
+  Http().bindAndHandleAsync(Route.asyncHandler(route), "localhost", 8080)
     .onComplete {
       case Success(_) =>
         println("Server started on port 8080. Type ENTER to terminate")
